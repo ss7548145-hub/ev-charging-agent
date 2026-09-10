@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltIQ — AI Electric Vehicle Charging Optimization Agent</title>
+  <meta name="description" content="Intelligent LLM-powered EV Charging Optimization Agent for station demand forecasting, schedule optimization, and Time-of-Use cost reduction.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="brand-wrapper">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">VoltIQ Agent</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted);">Autonomous EV Grid & Cost Optimizer</div>
+      </div>
+      <span class="brand-tag">Groq LLM Powered</span>
+    </div>
+
+    <div class="nav-controls">
+      <div class="station-select-wrapper">
+        <span style="font-size: 0.85rem; color: var(--accent-cyan);">📍 Station:</span>
+        <select id="station-select" class="station-select">
+          <option value="ST-01">Loading stations...</option>
+        </select>
+      </div>
+
+      <div id="health-status-badge" class="badge-status">
+        <span class="status-dot"></span> Online
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+
+    <!-- KPI Metric Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>TOTAL ENERGY DELIVERED</span>
+          <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">⚡</div>
+        </div>
+        <div id="kpi-energy" class="kpi-value">--</div>
+        <div class="kpi-subtext">Cumulative 90-day volume</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>STATION UTILIZATION</span>
+          <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">📈</div>
+        </div>
+        <div id="kpi-utilization" class="kpi-value">--%</div>
+        <div class="kpi-subtext">Average port occupancy rate</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>PEAK TRAFFIC WINDOWS</span>
+          <div class="kpi-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber);">⏰</div>
+        </div>
+        <div id="kpi-peak" class="kpi-value" style="font-size: 1.5rem;">--</div>
+        <div class="kpi-subtext">Highest grid congestion periods</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>ACTIVE CHARGING PORTS</span>
+          <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🔌</div>
+        </div>
+        <div id="kpi-ports" class="kpi-value">--</div>
+        <div class="kpi-subtext">Available hardware connectors</div>
+      </div>
+    </section>
+
+    <!-- Dynamic Tariff Rate Strip -->
+    <section class="glass-panel" style="padding: 1rem 1.5rem;">
+      <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+        <span>💲 Dynamic Time-of-Use (TOU) Tariff Schedule</span>
+        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">— Live utility rate tiers</span>
+      </div>
+      <div class="tariff-pill-row">
+        <div class="tariff-pill" style="border-color: rgba(16, 185, 129, 0.4);">
+          <div class="tariff-pill-name" style="color: #10b981;">🟢 Super Off-Peak</div>
+          <div class="tariff-pill-price">$0.10 <span style="font-size: 0.7rem; font-weight: normal;">/kWh</span></div>
+          <div class="tariff-pill-hours">12:00 AM – 6:00 AM (Max Savings)</div>
+        </div>
+
+        <div class="tariff-pill" style="border-color: rgba(6, 182, 212, 0.4);">
+          <div class="tariff-pill-name" style="color: #06b6d4;">🔵 Off-Peak</div>
+          <div class="tariff-pill-price">$0.18 <span style="font-size: 0.7rem; font-weight: normal;">/kWh</span></div>
+          <div class="tariff-pill-hours">6:00 AM – 2:00 PM, 9:00 PM – 12:00 AM</div>
+        </div>
+
+        <div class="tariff-pill" style="border-color: rgba(245, 158, 11, 0.4);">
+          <div class="tariff-pill-name" style="color: #f59e0b;">🟡 Mid-Peak</div>
+          <div class="tariff-pill-price">$0.28 <span style="font-size: 0.7rem; font-weight: normal;">/kWh</span></div>
+          <div class="tariff-pill-hours">2:00 PM – 5:00 PM (Moderate)</div>
+        </div>
+
+        <div class="tariff-pill" style="border-color: rgba(244, 63, 94, 0.4);">
+          <div class="tariff-pill-name" style="color: #f43f5e;">🔴 On-Peak</div>
+          <div class="tariff-pill-price">$0.42 <span style="font-size: 0.7rem; font-weight: normal;">/kWh</span></div>
+          <div class="tariff-pill-hours">5:00 PM – 9:00 PM (High Grid Strain)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two Column Dashboard Grid -->
+    <div class="dashboard-grid">
+
+      <!-- Left Column: Visual Analytics & Forecasting -->
+      <div class="main-column">
+
+        <!-- 7x24 Occupancy Heatmap -->
+        <section class="glass-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🔥</span> 7×24 Station Occupancy Heatmap
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Historical Day vs. Hour Distribution</span>
+          </div>
+          <div id="heatmap-grid" class="heatmap-container">
+            <!-- Populated via JS -->
+          </div>
+          <div class="heatmap-legend">
+            <span>Low (0%)</span>
+            <div class="legend-bar"></div>
+            <span>High (100% Congested)</span>
+          </div>
+        </section>
+
+        <!-- Hourly Demand & Weekday vs Weekend Chart -->
+        <section class="glass-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📊</span> Hourly Energy Demand & Congestion Profile
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Weekday vs. Weekend Load Curves</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="hourly-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- 48-Hour Energy Demand Prediction -->
+        <section class="glass-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🔮</span> 24–48h AI Energy Demand Forecast
+            </div>
+            <span style="font-size: 0.75rem; color: var(--accent-emerald);">Holt-Winters Seasonal Model</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="forecast-chart"></canvas>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: Interactive Optimizer & AI Chat Assistant -->
+      <div class="side-column">
+
+        <!-- Schedule Optimization Panel -->
+        <section class="glass-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>⚡</span> Optimize Charging Request
+            </div>
+            <span style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 600;">Multi-Objective</span>
+          </div>
+
+          <form id="optimizer-form" onsubmit="return false;">
+            <!-- Desired kWh Slider -->
+            <div class="form-group">
+              <div class="form-label">
+                <span>Energy Needed (kWh)</span>
+                <span id="val-kwh" class="form-val-display">45 kWh</span>
+              </div>
+              <input type="range" id="slider-kwh" class="slider-input" min="10" max="100" step="5" value="45">
+            </div>
+
+            <!-- Deadline Slider -->
+            <div class="form-group">
+              <div class="form-label">
+                <span>Departure Deadline</span>
+                <span id="val-deadline" class="form-val-display">In 12 Hours</span>
+              </div>
+              <input type="range" id="slider-deadline" class="slider-input" min="2" max="24" step="1" value="12">
+            </div>
+
+            <!-- Charger Speed Selector -->
+            <div class="form-group">
+              <div class="form-label">
+                <span>Charger Hardware Speed</span>
+              </div>
+              <div class="power-select-grid">
+                <button type="button" class="power-option-btn" data-power="22">22 kW (AC)</button>
+                <button type="button" class="power-option-btn active" data-power="50">50 kW (DC)</button>
+                <button type="button" class="power-option-btn" data-power="150">150 kW (Ultra)</button>
+              </div>
+            </div>
+
+            <button type="button" id="btn-optimize" class="btn-optimize">
+              ⚡ Optimize Charging Schedule
+            </button>
+          </form>
+
+          <!-- Result Area -->
+          <div id="opt-result-container">
+            <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- Interactive AI Chat Assistant -->
+        <section class="glass-panel chat-panel">
+          <div class="panel-header" style="margin-bottom: 0.5rem;">
+            <div class="panel-title">
+              <span>💬</span> VoltIQ Assistant
+            </div>
+            <span style="font-size: 0.72rem; color: var(--accent-cyan);">Grounding Active</span>
+          </div>
+
+          <div id="chat-history" class="chat-history">
+            <div class="chat-msg agent">
+              <div class="msg-bubble">
+                Hello! I'm VoltIQ, your EV energy advisor. Ask me about congestion trends, cheapest charging windows, or station performance!
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Prompts -->
+          <div class="chip-row">
+            <button class="quick-chip">"Why is station full at 6pm?"</button>
+            <button class="quick-chip">"When is the cheapest rate?"</button>
+            <button class="quick-chip">"Show weekend patterns"</button>
+          </div>
+
+          <div class="chat-input-wrapper">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask about station patterns or savings...">
+            <button id="btn-send-chat" class="btn-send">➤</button>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    VoltIQ — Electric Vehicle Charging Optimization & Grid Congestion AI Agent &bull; Powered by FastAPI & Groq LLM
+  </footer>
+
+  <!-- Application Script -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
